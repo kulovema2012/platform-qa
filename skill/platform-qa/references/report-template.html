@@ -1,0 +1,216 @@
+<!doctype html>
+<!--
+  platform-qa report template.
+  Replace every double-brace placeholder. Placeholders ending in _rows or _items take
+  repeated HTML using the commented example markup next to them. Escape all
+  text taken from the app (titles, errors, inputs) as HTML before inserting.
+  Never include secrets, tokens, real personal data or real customer data.
+  Sections follow the required order: verdict, summary, failures and blind
+  spots, missing features, coverage, tests written, not tested, cost.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA Report</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --text: #1d1d1b;
+    --muted: #5f5f5a;
+    --border: #e2e1dc;
+    --accent: #2f5bd3;
+    --high: #b42318;
+    --high-bg: #fdecea;
+    --medium: #9a5b00;
+    --medium-bg: #fff4e0;
+    --low: #3d6b35;
+    --low-bg: #ebf5e8;
+    --pass: #1f7a4d;
+    --fail: #b42318;
+    --score-bg: #1d1d1b;
+    --score-text: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141413;
+      --surface: #1e1e1c;
+      --text: #ecebe6;
+      --muted: #a6a59f;
+      --border: #34332f;
+      --accent: #8aa8ff;
+      --high: #ff8a80;
+      --high-bg: #3a1d1b;
+      --medium: #f5b955;
+      --medium-bg: #36290f;
+      --low: #9fd38f;
+      --low-bg: #1e3019;
+      --pass: #6fd3a0;
+      --fail: #ff8a80;
+      --score-bg: #ecebe6;
+      --score-text: #141413;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141413;
+    --surface: #1e1e1c;
+    --text: #ecebe6;
+    --muted: #a6a59f;
+    --border: #34332f;
+    --accent: #8aa8ff;
+    --high: #ff8a80;
+    --high-bg: #3a1d1b;
+    --medium: #f5b955;
+    --medium-bg: #36290f;
+    --low: #9fd38f;
+    --low-bg: #1e3019;
+    --pass: #6fd3a0;
+    --fail: #ff8a80;
+    --score-bg: #ecebe6;
+    --score-text: #141413;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Thai", sans-serif;
+  }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1.2rem; margin: 40px 0 12px; }
+  h3 { font-size: 1rem; margin: 0 0 6px; }
+  p { margin: 0 0 8px; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+  .verdict { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .score { background: var(--score-bg); color: var(--score-text); border-radius: 12px; padding: 12px 18px; font-size: 2rem; font-weight: 700; line-height: 1; }
+  .score small { font-size: 1rem; font-weight: 500; opacity: 0.8; }
+  .verdict-text { flex: 1 1 240px; min-width: 0; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .stat { min-width: 0; overflow-wrap: anywhere; }
+  .stat .n { font-size: 1.5rem; font-weight: 700; }
+  .card, .verdict-text, h1, h2, h3, p, li { overflow-wrap: anywhere; }
+  .tag { display: inline-block; border-radius: 999px; padding: 1px 10px; font-size: 0.8rem; font-weight: 600; }
+  .high { color: var(--high); background: var(--high-bg); }
+  .medium { color: var(--medium); background: var(--medium-bg); }
+  .low { color: var(--low); background: var(--low-bg); }
+  .pass { color: var(--pass); font-weight: 600; }
+  .fail { color: var(--fail); font-weight: 600; }
+  ol, ul { margin: 6px 0 8px; padding-left: 22px; }
+  code { font: 0.85em ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  details summary { cursor: pointer; color: var(--accent); }
+  img { max-width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--border); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- 1. Verdict -->
+  <section class="card verdict" aria-label="Verdict">
+    <div class="score">{{score}}<small>/5</small></div>
+    <div class="verdict-text">
+      <h1>{{verdict}}</h1>
+      <!-- commit: short hash, or "not a git repository" -->
+      <p class="muted">{{app_name}} · {{target}} · commit <code>{{commit}}</code> · depth {{depth}} · {{run_date}} · confidence {{confidence}}</p>
+      <p class="muted">{{comparison_with_last_run}}</p>
+      <p class="muted">Focus: {{focus}} · Confidence reason: {{confidence_reason}}</p>
+    </div>
+  </section>
+
+  <!-- 2. Summary -->
+  <h2>Summary</h2>
+  <div class="stats">
+    <!-- Counts are checks (feature x angle x role), not features. -->
+    <div class="card stat"><div class="n">{{checks_total}}</div><div class="muted">checks on {{features_total}} features</div><div><span class="pass">{{checks_pass}} pass</span> · <span class="fail">{{checks_fail}} fail</span> · {{checks_untested}} untested</div></div>
+    <div class="card stat"><div class="n">{{blind_spots_total}}</div><div class="muted">blind spots</div><div>{{blind_spots_by_severity}}</div></div>
+    <div class="card stat"><div class="n">{{missing_total}}</div><div class="muted">missing features</div><div>{{missing_by_priority}}</div></div>
+    <div class="card stat"><div class="n">{{ai_status_short}}</div><div class="muted">AI answers</div><div>{{ai_status}}</div></div>
+  </div>
+  <p class="muted">Skipped at this depth: {{skipped_at_depth}}</p>
+  <div class="card">
+    <h3>Area scores</h3>
+    <ul>{{area_score_items}}</ul>
+    <!-- <li><strong>Money (critical): 2</strong> · refunds above the payment are accepted</li> -->
+  </div>
+  <div class="card">
+    <h3>Questions asked during the run</h3>
+    <ul>{{question_items}}</ul>
+    <!-- <li>Paid AI checks (40 calls, est. 0.20-0.60): declined</li> -->
+  </div>
+
+  <!-- 3. Failures and blind spots, most severe first -->
+  <h2>Failures and blind spots</h2>
+  {{finding_items}}
+  <!-- Example finding:
+  <article class="card">
+    <h3><span class="tag high">high</span> Refund larger than the payment is accepted</h3>
+    <p class="muted">F-M-07 · Create refund · <code>app/api/refunds/route.ts:31</code> · reproduced 2×</p>
+    <ol><li>Sign in as admin</li><li>Open payment P-1 (paid 100.00)</li><li>Refund 150.00 and submit</li></ol>
+    <p><strong>Expected:</strong> rejected. <strong>Actual:</strong> saved; balance −50.00.</p>
+    <details><summary>Evidence</summary><img src="..." alt="Refund saved with balance minus 50"></details>
+  </article>
+  -->
+
+  <h3>Suspected (not reproduced, not scored)</h3>
+  {{suspected_items}}
+
+  <h3>Checked and working</h3>
+  <ul>{{passed_items}}</ul>
+  <!-- <li>Race for the last seat: one booking accepted, one rejected (409)</li> -->
+
+  <!-- 4. Missing features -->
+  <h2>Missing features</h2>
+  {{missing_items}}
+  <!-- Example:
+  <article class="card">
+    <h3><span class="tag high">high</span> Admin cannot block abusive users</h3>
+    <p>Why it matters here: ...</p>
+    <p class="muted">Evidence: no block or suspend action in <code>app/admin/users</code>; no <code>blocked_at</code> field in the users table.</p>
+  </article>
+  -->
+  <p class="muted">Excluded by design (per project docs): {{excluded_by_design}}</p>
+
+  <!-- 5. Coverage map -->
+  <h2>Coverage</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Feature</th><th scope="col">Who</th><th scope="col">State</th><th scope="col">Input</th><th scope="col">Timing</th></tr></thead>
+      <tbody>
+        {{coverage_rows}}
+        <!-- <tr><td>Create refund</td><td>partly: admin only</td><td>untested</td><td>covered</td><td>untested</td></tr> -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 6. Tests written -->
+  <h2>Tests written</h2>
+  <div class="card">
+    <p>Branch <code>{{branch}}</code> · {{tests_written}} tests ({{tests_known_failing}} known-failing) · {{push_state}}</p>
+    <ul>{{test_items}}</ul>
+    <!-- <li><code>tests/refunds.spec.ts</code>: refund above payment is rejected (known-failing → F-M-07)</li> -->
+  </div>
+
+  <!-- 7. Could not test -->
+  <h2>Could not test</h2>
+  <ul>{{untestable_items}}</ul>
+  <!-- <li>Owner role: no test account or seed. Proposed seed: ...</li> -->
+
+  <!-- 8. Cost -->
+  <h2>Cost</h2>
+  <div class="card">
+    <p>Helpers run: {{helpers_run}}</p>
+    <p>Paid AI calls: {{paid_ai_calls}}</p>
+    <!-- e.g. "None (declined)" or "48 calls to <model>, approved at 14:02; estimated 0.20-0.60, actual 0.31" -->
+  </div>
+
+  <p class="muted">Generated by platform-qa. Evidence uses synthetic test data only.</p>
+</main>
+</body>
+</html>

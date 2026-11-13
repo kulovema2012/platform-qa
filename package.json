@@ -1,0 +1,25 @@
+{
+  "name": "platform-qa",
+  "version": "0.1.0",
+  "description": "Agent skill that tests any business app locally: every feature, blind spots, missing features and AI answers, with a scored report.",
+  "type": "module",
+  "bin": {
+    "platform-qa": "bin/platform-qa.mjs"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "skill",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "bun test",
+    "lint:skill": "node scripts/check-skill.mjs skill/platform-qa",
+    "lint:repo": "node scripts/check-skill.mjs --repo"
+  },
+  "license": "MIT"
+}
