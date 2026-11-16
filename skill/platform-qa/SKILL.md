@@ -1,6 +1,6 @@
 ---
 name: platform-qa
-description: Comprehensively test any business app or platform on the local machine, in any industry (store, booking, finance, SaaS, chatbot, internal tool). Inventories every feature and tests it per role, state, input and timing; hunts blind spots and edge cases with fresh attacker helpers; suggests features a complete product of its kind would have but this one lacks; tests AI or chatbot answers (free checks first, asks before any paid call); writes tests for the gaps on a local branch and asks before pushing; returns a 1-5 scored report as a private page. Use for "test this app", "QA this", "full test", "find gaps", "what is missing", "is the admin complete", "test the chatbot", or /platform-qa. Local only; never staging or production.
+description: Comprehensively test any business app or platform on the local machine, in any industry (store, booking, finance, SaaS, chatbot, internal tool). Inventories every feature and tests it per role, state, input and timing; hunts blind spots and edge cases with fresh attacker helpers; suggests features a complete product of its kind would have but this one lacks; tests AI or chatbot answers (free checks first, asks before any paid call); writes tests for the gaps on a local branch and asks before pushing; returns a 1-5 scored report as a private page with a status per item, which it keeps current as items are fixed and re-tested. Use for "test this app", "QA this", "full test", "find gaps", "what is missing", "is the admin complete", "test the chatbot", "update the QA report", or /platform-qa. Local only; never staging or production.
 ---
 
 # platform-qa
@@ -43,7 +43,7 @@ The report always states what the chosen depth skipped.
 
 `<project>` is `<folder name>-<hash>`: the target folder's name (the worktree folder when testing a worktree) and the first 8 hex characters of the SHA-1 of its absolute path written with forward slashes and a lowercase drive letter (for example `c:/work/shop`). Never write either folder inside the project, and never commit them. If a tool can only save inside the project (some browser tools do), save to a git-ignored folder there, move the files to the run folder straight away, and delete only the files you created. Formats are in [inventory](references/inventory.md).
 
-At the start, read `state.json` if it exists: reuse the earlier report link (a local report is always written fresh in the new run folder), and compare this run with the previous one in the report.
+At the start, read `state.json` if it exists: reuse the earlier report link (a local report is always written fresh in the new run folder), read the earlier item statuses, re-test open items and keep their IDs ([tracking](references/tracking.md), "On a later run"), and compare this run with the previous one in the report.
 
 ## Process
 
@@ -127,21 +127,25 @@ Add no new test dependency without asking.
 ### Phase 8: Report
 
 1. Score with [scoring](references/scoring.md). The overall score is capped by the weakest critical path.
-2. Fill [the report template](references/report-template.html) in the section order it defines, including area scores, focus, confidence reason and the questions you asked.
+2. Fill [the report template](references/report-template.html) in the section order it defines, including area scores, focus, confidence reason and the questions you asked. Give every finding and missing feature its ID in `data-item`, keep the tracker block unchanged, and fill the status seed per [tracking](references/tracking.md).
 3. Check the filled report and every evidence file it includes (screenshots, logs, error text) for secrets, tokens, personal data and real customer data; remove or redact any before publishing.
 4. Publish:
-   - When an Artifact tool is available: load its design guidance skill if one is offered, adapt the template to that tool's page rules (for example some tools add the document wrapper themselves, so publish only the styles and body content), publish the report as a private page, and give the user the link. If `state.json` holds an earlier report link, update that page instead of creating a new one.
+   - When an Artifact tool is available: load its design guidance skill if one is offered, adapt the template to that tool's page rules (for example some tools add the document wrapper themselves, so publish only the styles and body content), publish the report as a private page with the shared database capability (`capabilities: { db: {} }`) so statuses are saved, and give the user the link. Carried-over statuses go into its `statuses` collection after publishing. If `state.json` holds an earlier report link, update that page instead of creating a new one.
    - Otherwise: save the HTML file in the run folder and give its path.
 5. Update `state.json` (`reportUrl` or `reportPath`, `lastCommit`, `lastDepth`, `lastRunDir`, `lastScore`).
 6. Print a short summary in the conversation: score, one-line verdict, top findings, the report link, the branch with new tests, and what needs the user's decision.
 7. Clean up per hard rule 7.
+
+## After the run: keep the report current
+
+The report is the checklist for fixing what it found. Whenever you work on one of its items, in this session or a later one, update that item's status on the report in the same turn: In progress when work starts, Blocked with what it waits on, Fixed – needs re-test when the change merges, Verified only after a re-test passes, Reopened when a re-test fails. Follow [tracking](references/tracking.md). Find the report through `state.json` (`reportUrl` or `reportPath`).
 
 ## Without some tools
 
 | Missing | Do instead |
 |---|---|
 | Subagents | Run the helper areas one after another with the same rules |
-| Artifact tool | Local HTML report in the run folder |
+| Artifact tool | Local HTML report in the run folder; statuses go in its status seed |
 | Playwright MCP and Claude in Chrome | The project's own Playwright runner, or HTTP checks plus a note that screens were not driven |
 | Any browser at all | API and code-level checks only; mark screen checks blocked |
 
